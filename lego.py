@@ -7,13 +7,14 @@
 
 DEBUG = True
 """ Log additional process info. """
-FORCE_REBUILD = True
-""" Remove existing database and rebuild from CSV."""
+FORCE_REBUILD = False
+""" Remove existing database and rebuild from CSV. Required when data changes are made. """
 
-import csv
 import os
 import sqlite3
 import atexit
+
+from PIL import Image
 
 import lego_data as lego
 import ebay as ebay
@@ -70,6 +71,7 @@ def main():
         print("3) Sets By Part")
         print("4) Part Search")
         print("5) Sale Search")
+        print("6) Parts by Set")
         print("================")
 
         command = input().strip().lower()
@@ -163,7 +165,24 @@ def main():
             sale_id = input().strip()
             sale_obj = ebay.get_sale_data(conn, sale_id)
             ebay.print_sale(sale_obj)
+            for photo in sale_obj['photos']:
+                img = Image.open("./sale_data/sale_photos/" + photo)
+                img.show()
             pause()
+
+        elif command in ['parts by set', 'pbs', '6']:
+            print("Set ID:")
+            set_id = input().strip()
+            part_ids = lego.parts_by_set(conn, set_id)
+            if len(part_ids) == 0:
+                print("No parts found.")
+            else:
+                for part_id in part_ids:
+                    part_obj = lego.part_by_id(conn, part_id)
+                    lego.print_part(part_obj)
+                print(str(len(part_ids)) + " parts in set.")
+            pause()
+            continue
 
         else:
             print("Unrecognized command. Type 'help' for a list of commands.")
