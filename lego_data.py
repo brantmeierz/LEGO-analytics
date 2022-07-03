@@ -1,5 +1,6 @@
 
 import csv
+from re import I
 import sqlite3
 
 def create_sets_table(conn: sqlite3.Connection) -> None:
@@ -121,7 +122,7 @@ def create_inventory_sets_table(conn: sqlite3.Connection) -> None:
             [inventory_id] INTEGER,
             [set_num] TEXT,
             [quantity] INTEGER,
-            PRIMARY KEY ([inventory_id], [set_num], [quantity])
+            PRIMARY KEY ([inventory_id], [set_num])
             )
         """)
     conn.commit()
@@ -332,14 +333,30 @@ def parts_by_name(conn: sqlite3.Connection, name_fragment: str = '') -> list[str
 
     return return_list
 
-def build_tables(conn: sqlite3.Connection) -> None:
+def build_tables(conn: sqlite3.Connection, verbose: bool = False) -> None:
+    if verbose:
+        print("Creating table [sets]...")
     create_sets_table(conn)
+    if verbose:
+        print("Creating table [parts]...")
     create_parts_table(conn)
+    if verbose:
+        print("Creating table [colors]...")
     create_colors_table(conn)
+    if verbose:
+        print("Creating table [themes]...")
     create_themes_table(conn)
+    if verbose:
+        print("Creating table [part_categories]...")
     create_part_categories_table(conn)
+    if verbose:
+        print("Creating table [inventories]...")
     create_inventories_table(conn)
+    if verbose:
+        print("Creating table [inventory_sets]...")
     create_inventory_sets_table(conn)
+    if verbose:
+        print("Creating table [inventory_parts]...")
     create_inventory_parts_table(conn)
 
 def print_set(set_obj):

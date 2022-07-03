@@ -5,13 +5,22 @@
 
 """
 
-FORCE_REBUILD = False
-""" Remove existing LEGO database and rebuild from CSV."""
+DEBUG = True
+""" Log additional process info. """
+FORCE_REBUILD = True
+""" Remove existing database and rebuild from CSV."""
 
 import csv
 import os
 import sqlite3
+import atexit
+
 import lego_data as lego
+import ebay as ebay
+
+conn = None
+
+database_file = "lego2.db"
 
 #from typing import TypedDict
 
@@ -20,6 +29,11 @@ import lego_data as lego
 #    category: str
 #    part_num: int
 
+def exit_handler():
+    global conn
+    if type(conn) == sqlite3.Connection:
+        conn.close()
+
 def pause() -> None:
     print("Press [Enter] to continue")
     input()
@@ -27,11 +41,24 @@ def pause() -> None:
 def main():
 
     # Generate tables if not found or forced
-    if os.path.isfile('./lego.db') and FORCE_REBUILD:
-        os.remove('./lego.db')
-    conn = sqlite3.connect('lego.db')
-    if not os.path.isfile('./lego.db'):
-        lego.build_tables(conn)
+    if os.path.isfile('./' + database_file) and FORCE_REBUILD:
+        print("Removing existing file.")
+        try:
+            os.remove('./' + database_file)
+            print("File removed.")
+        except OSError as e:
+            print(e)
+        except Exception as e:
+            print(e)
+    global conn
+    if not os.path.isfile('./' + database_file):
+        conn = sqlite3.connect(database_file)
+        print("Building database...")
+        lego.build_tables(conn, DEBUG)
+        ebay.build_tables(conn, DEBUG)
+        print("Build complete.")
+    else:
+        conn = sqlite3.connect(database_file)
 
     command = ""
     while command not in ['exit', 'quit', 'stop', 'escape']:
@@ -42,6 +69,7 @@ def main():
         print("2) Part Info")
         print("3) Sets By Part")
         print("4) Part Search")
+        print("5) Sale Search")
         print("================")
 
         command = input().strip().lower()
@@ -58,6 +86,7 @@ def main():
             print("\tGet a list of sets containing a specified part and color combination")
             print("4) part search (ps, search part, sp)")
             print("\tSearch for all parts whose names contain a search string")
+            print("5) sale search (ss)")
             pause()
             continue
 
@@ -128,10 +157,20 @@ def main():
                     search_again = False
             continue
 
+        elif command in ['sale search', 'ss', '5']:
+
+            print("Sale ID:")
+            sale_id = input().strip()
+            sale_obj = ebay.get_sale_data(conn, sale_id)
+            ebay.print_sale(sale_obj)
+            pause()
+
         else:
             print("Unrecognized command. Type 'help' for a list of commands.")
             pause()
 
     conn.close()
 
+
+atexit.register(exit_handler)
 main()
