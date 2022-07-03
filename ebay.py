@@ -1,6 +1,8 @@
 
 import csv
 import sqlite3
+from PIL import Image
+import util as util
 
 def create_sales_table(conn: sqlite3.Connection) -> None:
     cursor = conn.cursor()
@@ -91,11 +93,38 @@ def get_sale_data(conn: sqlite3.Connection, sale_id: int) -> dict:
     for photo in sale_photos:
         photo_list.append(photo[0])
     sale_record['photos'] = photo_list
+    cursor.execute("""
+        SELECT
+            [sale_parts].[part_num],
+            [parts].[name],
+            [sale_parts].[color_id],
+            [colors].[name],
+            [quantity]
+        FROM [sale_parts]
+            LEFT JOIN [colors]
+                ON [colors].[id] = [sale_parts].[color_id]
+            LEFT JOIN [parts]
+                ON [parts].[part_num] = [sale_parts].[part_num]
+        WHERE [sale_id] = ?
+        """, [sale_id])
+    parts = cursor.fetchall()
+    sale_record['parts'] = []
+    for part in parts:
+        sale_record['parts'].append({
+            'part_num': part[0],
+            'name': part[1],
+            'color_id': part[2],
+            'color': part[3],
+            'quantity': part[4]
+        })
 
     return sale_record
 
 def print_sale(sale_obj: dict) -> None:
-    print("($" + str(sale_obj['price'] + sale_obj['shipping']) + ") " + sale_obj['title'] + " from seller " + sale_obj['seller'])
+    print("(" + util.money_format(sale_obj['price'] + sale_obj['shipping']) + ") \"" + sale_obj['title'] + "\" from seller \"" + sale_obj['seller'] + "\"")
+    print(" Parts included:")
+    for part in sale_obj['parts']:
+        print("  - " + str(part['quantity']) + "x [" + part['part_num'] + "] (" + part['color'] + " [" + str(part['color_id']) + "]) \"" + part['name'] + "\"")
 
 def build_tables(conn: sqlite3.Connection, verbose: bool = False) -> None:
     if verbose:

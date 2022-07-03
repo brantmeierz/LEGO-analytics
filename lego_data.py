@@ -234,6 +234,14 @@ def sets_by_part(conn: sqlite3.Connection, part_id: str = '', color_name: str = 
 
     return return_list
 
+def parts_by_set(conn: sqlite3.Connection, set_num = '') -> list[dict]:
+    if set_num == '':
+        return []
+
+    cursor = conn.cursor()
+
+    return []
+
 def set_by_id(conn: sqlite3.Connection, set_id: str) -> dict:
     """
     Retrieve set data by id.
@@ -359,8 +367,8 @@ def build_tables(conn: sqlite3.Connection, verbose: bool = False) -> None:
         print("Creating table [inventory_parts]...")
     create_inventory_parts_table(conn)
 
-def print_set(set_obj):
+def print_set(set_obj: dict) -> None:
     print('[' + set_obj['set_num'] + '] ' + set_obj['name'] + '  (' + set_obj['theme'] + ': ' + str(set_obj['year']) + ', ' + str(set_obj['num_parts']) + ' parts)')
 
-def print_part(part_obj):
-    print('[' + part_obj['part_num'] + '] ' + part_obj['name'] + ' (' + part_obj['category'] + ')')
+def print_part(part_obj: dict) -> None:
+    print('[' + part_obj['part_num'] + '] \"' + part_obj['name'] + '\" (' + part_obj['category'] + ')')
