@@ -1,0 +1,26 @@
+[sale] Schema
+
+[item_id] TEXT
+[date] TEXT
+[price] NUMBER
+[shipping] NUMBER
+[seller_name] TEXT
+[order_number] TEXT
+
+==
+[sale_photos] Schema
+
+[photo_name] TEXT
+[item_id] TEXT
+
+==
+[sale_parts] Schema
+
+[sale_id] NUMBER
+[part_num] TEXT
+[color_id] NUMBER
+[quantity] NUMBER
+
+
+
+90498
